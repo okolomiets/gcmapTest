@@ -84,7 +84,6 @@ exports.editAirport = (req, res, next) ->
   return res.redirect "/"
 
 exports.confirmAirport = (req, res, next) ->
-  console.log 'req.params.code: ', req.params.code
   code = req.params.code
   return res.render "confirm", { code: code }
 
