@@ -1,0 +1,33 @@
+extends layout
+block content
+    div.container.small
+        div.row
+            div.col-md-6
+                form.form-inline(role="form", action="/", method="post", enctype="multipart/form-data")
+                    input.form-control.input-sm(type="text", name="airport", placeholder="IATA code")
+                    button.btn.btn-primary.btn-sm(type="submit", value="submit") Submit
+                div.content
+                    table.table.table-striped.table-condensed
+                        thead
+                            tr
+                                th airport
+                                th latitude
+                                th longitude
+                                th timezone
+                        tbody
+                            - if(Object.keys(list).length > 0)
+                                each val, key in list
+                                    tr
+                                        td
+                                            a(href='/airport/#{key}') !{val.name}
+                                        td !{val.latitude}
+                                        td !{val.longitude}
+                                        td= val.timezone
+                            - else
+                                tr
+                                    td
+                                    td
+                                    td
+                                    td
+
+
