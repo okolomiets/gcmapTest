@@ -2,23 +2,39 @@ extends layout
 block content
 	div.container.small
 		div.row
-			div.col-md-8
+			div.col-md-6
 				a.btn.btn-default.btn-sm(href='/', role='button') Back
-				h4 !{name}
+				h4 !{airport.name}
+				- function isEmptyObject(obj) {
+				-      var name;
+				-      for (name in obj) {
+				-        return false;
+				-      }
+				-      return true;
+				- }
+				- if (isEmptyObject(errors) == false)
+					div.alert.alert-warning
+						.errorMessage= "The following errors occurred:"
+							ul  
+								- each error in errors
+									li= error.msg
 				form.form-horizontal(role="form", action="/airport/#{code}", method="post", enctype="multipart/form-data")
 					.form-group
 						label.col-sm-2.control-label(for="latitude") latitude
-						.col-sm-10
-							input(type="text" name="latitude" value="#{airport.latitude}")
+						.col-sm-6
+							input.form-control(type="text" name="latitude" value="#{airport.latitude}")
+							span.help-block DD°MM'SS"HS (Google Geocoder format)
 					.form-group
 						label.col-sm-2.control-label(for="longitude") longitude
-						.col-sm-10
-							input(type="text" name="longitude" value="#{airport.longitude}") 
+						.col-sm-6
+							input.form-control(type="text" name="longitude" value="#{airport.longitude}")
+							span.help-block DD°MM'SS"HS (Google Geocoder format)
 					.form-group
 						label.col-sm-2.control-label(for="timezone") timezone
-						.col-sm-10
-							input(type="text" name="timezone" value="#{airport.timezone}")
+						.col-sm-6
+							input.form-control(type="text" name="timezone" value="#{airport.timezone}")
+							span.help-block UTC (DST)
 					.form-group
-						.col-sm-offset-2.col-sm-10
+						.col-sm-offset-2.col-sm-6
 							button.btn.btn-primary.btn-sm(type="submit", value="submit") Save
-				a.btn.btn-danger.btn-sm(href='/airport/delete/#{code}', role='button') Delete
+				a.btn.btn-danger.btn-sm(href='/airport/confirm/#{code}', role='button') Delete

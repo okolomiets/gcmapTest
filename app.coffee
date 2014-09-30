@@ -9,6 +9,7 @@ http = require("http")
 util = require("util")
 path = require("path")
 app = express()
+validator = require('express-validator')
 
 # all environments
 app.set "port", process.env.PORT or 3000
@@ -20,6 +21,7 @@ app.use express.bodyParser(
   keepExtensions: true
   uploadDir: __dirname + "/public/images"
 )
+app.use validator()
 app.use express.json()
 app.use express.urlencoded()
 app.use express.methodOverride()
@@ -32,8 +34,10 @@ app.use express.errorHandler()  if "development" is app.get("env")
 app.get "/", common.index
 app.post "/", common.parseHtml
 #CRUD
+app.param('code', common.loadAirport)
 app.get "/airport/:code", common.getAirport
 app.post "/airport/:code", common.editAirport
+app.get "/airport/confirm/:code", common.confirmAirport
 app.get "/airport/delete/:code", common.deleteAirport
 
 http.createServer(app).listen app.get("port"), ->

@@ -1,0 +1,12 @@
+extends layout
+block content
+	div.container.small
+		div.row
+			div.col-md-4.jumbotron
+				h3 You are about to delete airport info. 
+				p Are you sure?
+				div.row
+					div.col-sm-2
+						a.btn.btn-danger.btn-sm(href='/airport/delete/#{code}', role='button') Yes
+					div.col-sm-offset-1.col-sm-2
+						a.btn.btn-primary.btn-sm(href='/', role='button') No

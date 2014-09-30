@@ -12,6 +12,8 @@
     "coffee-script": ">= 1.6.3",
     "cheerio": "*",
     "request": "*",
-    "extend": "*"
+    "extend": "*",
+    "express-validator": "*",
+    "iconv": "*"
   }
 }

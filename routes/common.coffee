@@ -2,6 +2,8 @@ util = require 'util'
 fs = require 'fs'
 cheerio = require 'cheerio'
 request  = require 'request'
+Iconv = require('iconv').Iconv
+translator = new Iconv('iso-8859-1','utf-8')
 extend = require 'extend'
 config = require '../config/config'
 
@@ -10,14 +12,14 @@ list = {}
 
 # get an array of objects that match your request for some object properties
 
-Array::where = (query) ->
-    return [] if typeof query isnt "object"
-    hit = Object.keys(query).length
-    @filter (item) ->
-        match = 0
-        for key, val of query
-            match += 1 if item[key] is val
-        if match is hit then true else false
+# Array::where = (query) ->
+#     return [] if typeof query isnt "object"
+#     hit = Object.keys(query).length
+#     @filter (item) ->
+#         match = 0
+#         for key, val of query
+#             match += 1 if item[key] is val
+#         if match is hit then true else false
 
 exports.index = (req, res, next) ->
   res.render "index",
@@ -26,11 +28,21 @@ exports.index = (req, res, next) ->
   return
 
 exports.parseHtml = (req, res, next) ->
+  # request body params validation
+  #
+  req.checkBody('airport', 'Invalid airport code').notEmpty()
+  errors = req.validationErrors()
+  return res.render "index", { list: list , errors: errors } if errors
+  
   url = config.gcmapUrl + req.body.airport
-  request url, (error, response, body) ->
+  request {url: url, encoding:  null}, (error, response, body) ->
     if not error and response.statusCode is 200
-      return res.send '400' unless body
+      # body needs to be converted for utf-8 charset
+      #
+      body = translator.convert(body).toString()
       $ = cheerio.load(body)
+
+      # select info elements from table
       obj = 
         name: $('td.fn.org').html()
       $('#mid table.vcard.geo td').each (td) ->
@@ -38,13 +50,20 @@ exports.parseHtml = (req, res, next) ->
           obj.latitude = $(@).text().replace(/<abbr.+<\/abbr>/g, '') if $(@).find('abbr').hasClass('latitude')
           obj.longitude = $(@).text().replace(/<abbr.+<\/abbr>/g, '') if $(@).find('abbr').hasClass('longitude')
           obj.timezone = $(@).text().replace(/<abbr.+<\/abbr>/g, '') if $(@).find('abbr').hasClass('tz')
+      
+      # save data to list
       list[req.body.airport] = obj
       return res.render "index",
         list: list
+        errors: null
+
+exports.loadAirport = (req, res, next, code) ->
+  req.airport = list[code]
+  next()
 
 exports.getAirport = (req, res, next) ->
   code = req.params.code
-  airport = list[code] #(list.where code: code)[0]
+  airport = req.airport # list[code] #(list.where code: code)[0]
   return res.render "airport", 
     opts = 
       code: code
@@ -52,8 +71,27 @@ exports.getAirport = (req, res, next) ->
 
 exports.editAirport = (req, res, next) ->
   code = req.params.code
-  list[code] = extend list[code], req.body
+  airport = req.airport
+  
+  # request body params validation
+  #
+  # latitude/longitude: DD°MM'SS"HS (Google Geocoder format), e.g. 50°20'42"N (50.345000) or 176°27'26"W (-176.457221)
+  # timezone: UTC (DST), e.g. UTC+2 (DST+3) or UTC+12:45 (DST+13:45)
+  #
+  req.checkBody('latitude', 'Invalid latitude').matches(/^(\d+°\d+'\d+"\w?)\s\((\W?\d+\.\d+)\)$/i)
+  req.checkBody('longitude', 'Invalid longitude').matches(/^(\d+°\d+'\d+"\w?)\s\((\W?\d+\.\d+)\)$/i)
+  req.checkBody('timezone', 'Invalid timezone').matches(/^(UTC\W\d+\:?\d*)\s\((DST\W\d+\:?\d*)\)$/i)
+
+  errors = req.validationErrors()
+  return res.render "airport", { code: code, airport: airport, errors: errors } if errors
+  
+  list[code] = extend req.airport, req.body
   return res.redirect "/"
+
+exports.confirmAirport = (req, res, next) ->
+  console.log 'req.params.code: ', req.params.code
+  code = req.params.code
+  return res.render "confirm", { code: code }
 
 exports.deleteAirport = (req, res, next) ->
   code = req.params.code
