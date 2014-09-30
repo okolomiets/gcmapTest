@@ -10,22 +10,9 @@ config = require '../config/config'
 # local files list
 list = {}
 
-# get an array of objects that match your request for some object properties
-
-# Array::where = (query) ->
-#     return [] if typeof query isnt "object"
-#     hit = Object.keys(query).length
-#     @filter (item) ->
-#         match = 0
-#         for key, val of query
-#             match += 1 if item[key] is val
-#         if match is hit then true else false
-
 exports.index = (req, res, next) ->
   res.render "index",
     list: list
-
-  return
 
 exports.parseHtml = (req, res, next) ->
   # request body params validation
@@ -53,9 +40,10 @@ exports.parseHtml = (req, res, next) ->
       
       # save data to list
       list[req.body.airport] = obj
-      return res.render "index",
+      opts = 
         list: list
         errors: null
+      return res.render "index", opts
 
 exports.loadAirport = (req, res, next, code) ->
   req.airport = list[code]
@@ -64,10 +52,13 @@ exports.loadAirport = (req, res, next, code) ->
 exports.getAirport = (req, res, next) ->
   code = req.params.code
   airport = req.airport # list[code] #(list.where code: code)[0]
-  return res.render "airport", 
-    opts = 
+  opts = 
       code: code
       airport: airport
+      errors: null
+
+  return res.render "airport", opts
+    
 
 exports.editAirport = (req, res, next) ->
   code = req.params.code
@@ -83,7 +74,11 @@ exports.editAirport = (req, res, next) ->
   req.checkBody('timezone', 'Invalid timezone').matches(/^(UTC\W\d+\:?\d*)\s\((DST\W\d+\:?\d*)\)$/i)
 
   errors = req.validationErrors()
-  return res.render "airport", { code: code, airport: airport, errors: errors } if errors
+  opts = 
+      code: code
+      airport: airport
+      errors: errors
+  return res.render "airport", opts if errors
   
   list[code] = extend req.airport, req.body
   return res.redirect "/"

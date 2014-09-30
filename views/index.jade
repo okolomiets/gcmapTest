@@ -6,14 +6,8 @@ block content
                 form.form-inline(role="form", action="/", method="post", enctype="multipart/form-data")
                     input.form-control.input-sm(type="text", name="airport", placeholder="IATA code")
                     button.btn.btn-primary.btn-sm(type="submit", value="submit") Submit
-                - function isEmptyObject(obj) {
-                -      var name;
-                -      for (name in obj) {
-                -        return false;
-                -      }
-                -      return true;
-                - }
-                - if (isEmptyObject(errors) == false)
+
+                - if (errors && Object.getOwnPropertyNames(errors).length > 0)
                     div.alert.alert-warning
                         .errorMessage= "The following errors occurred:"
                             ul  
