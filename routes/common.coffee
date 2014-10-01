@@ -17,7 +17,8 @@ exports.index = (req, res, next) ->
 exports.parseHtml = (req, res, next) ->
   # request body params validation
   #
-  req.checkBody('airport', 'Invalid airport code').notEmpty()
+  req.checkBody('airport', 'Invalid airport code: must not be empty').notEmpty()
+  req.checkBody('airport', 'Invalid airport code: must have 3 letters').matches(/^(\w{3})$/i)
   errors = req.validationErrors()
   return res.render "index", { list: list , errors: errors } if errors
   
@@ -43,6 +44,17 @@ exports.parseHtml = (req, res, next) ->
       opts = 
         list: list
         errors: null
+      return res.render "index", opts
+    else 
+      opts = 
+        list: list
+        errors: [
+          {
+            param: "airport"
+            msg: "Invalid airport code: must be defined by IATA"
+            value: ''
+          }
+        ]
       return res.render "index", opts
 
 exports.loadAirport = (req, res, next, code) ->
